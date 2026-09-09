@@ -1,0 +1,19 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# Netlify
+.netlify/
+
+# Logs (just in case any local tooling writes them — never commit real logs)
+*.log
+npm-debug.log*
+
+# Env files (not used by this static app, but ignored defensively)
+.env
+.env.local

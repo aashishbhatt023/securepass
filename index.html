@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SecurePass — Password Strength Checker &amp; Breach Alert</title>
+  <meta name="description" content="A privacy-focused, client-side password strength checker with k-anonymity breach detection via the Have I Been Pwned API." />
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <a class="skip-link" href="#password-input">Skip to password input</a>
+
+  <header class="site-header">
+    <div class="brand">
+      <img src="assets/favicon.svg" alt="" class="brand-mark" width="32" height="32" />
+      <div class="brand-text">
+        <span class="brand-name">SecurePass</span>
+        <span class="brand-tag">Password Strength Checker &amp; Breach Alert</span>
+      </div>
+    </div>
+    <div class="status-pill" role="status">
+      <span class="status-dot" aria-hidden="true"></span>
+      Runs locally in your browser — nothing is sent until you choose to check for breaches
+    </div>
+  </header>
+
+  <main class="dashboard">
+
+    <!-- PASSWORD INPUT -->
+    <section class="panel panel-input" aria-labelledby="input-heading">
+      <h1 id="input-heading" class="panel-title">Password Analysis</h1>
+
+      <div class="field-row">
+        <label for="password-input" class="field-label">Enter a password to analyze</label>
+        <div class="input-wrap">
+          <input
+            id="password-input"
+            type="password"
+            autocomplete="new-password"
+            spellcheck="false"
+            placeholder="Type a password…"
+            aria-describedby="privacy-microcopy"
+          />
+          <button type="button" id="toggle-visibility" class="icon-btn" aria-pressed="false" aria-label="Show password">
+            <svg id="eye-open" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+            <svg id="eye-closed" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" hidden><path d="M3 3l18 18"/><path d="M10.6 5.2A10.6 10.6 0 0 1 12 5c7 0 11 7 11 7a17.6 17.6 0 0 1-3.4 4.3M6.6 6.6C3.7 8.4 1 12 1 12s4 7 11 7c1.5 0 2.9-.3 4.1-.8"/><path d="M9.5 9.5a3 3 0 0 0 4.2 4.2"/></svg>
+          </button>
+        </div>
+        <p id="privacy-microcopy" class="microcopy">
+          Analyzed on this device only. Nothing is sent anywhere unless you press “Check Breach Status” below.
+        </p>
+      </div>
+
+      <div class="score-row">
+        <div class="score-number-wrap">
+          <span id="score-number" class="score-number">0</span>
+          <span class="score-max">/100</span>
+        </div>
+        <span id="strength-badge" class="strength-badge" data-level="empty">Enter a password</span>
+      </div>
+
+      <div class="meter-track" role="progressbar" aria-labelledby="input-heading" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="meter-bar-wrap">
+        <div id="meter-bar" class="meter-fill" data-level="empty"></div>
+      </div>
+      <div class="meter-scale" aria-hidden="true">
+        <span>Very Weak</span><span>Weak</span><span>Moderate</span><span>Strong</span><span>Very Strong</span>
+      </div>
+    </section>
+
+    <div class="panel-pair">
+      <!-- CHECKLIST -->
+      <section class="panel panel-checklist" aria-labelledby="checklist-heading">
+        <h2 id="checklist-heading" class="panel-title-sm">Characteristics</h2>
+        <ul id="checklist" class="checklist">
+          <li data-check="length"><span class="check-icon" aria-hidden="true">–</span><span>At least 12 characters</span></li>
+          <li data-check="upper"><span class="check-icon" aria-hidden="true">–</span><span>Uppercase letter (A–Z)</span></li>
+          <li data-check="lower"><span class="check-icon" aria-hidden="true">–</span><span>Lowercase letter (a–z)</span></li>
+          <li data-check="number"><span class="check-icon" aria-hidden="true">–</span><span>Number (0–9)</span></li>
+          <li data-check="special"><span class="check-icon" aria-hidden="true">–</span><span>Special character (!@#$…)</span></li>
+          <li data-check="pattern"><span class="check-icon" aria-hidden="true">–</span><span>No obvious patterns or repeats</span></li>
+        </ul>
+      </section>
+
+      <!-- ENTROPY -->
+      <section class="panel panel-entropy" aria-labelledby="entropy-heading">
+        <h2 id="entropy-heading" class="panel-title-sm">Estimated Entropy</h2>
+        <div class="entropy-value-row">
+          <span id="entropy-value" class="entropy-value">0</span>
+          <span class="entropy-unit">bits</span>
+        </div>
+        <div class="entropy-bar-track">
+          <div id="entropy-bar" class="entropy-bar-fill"></div>
+        </div>
+        <p class="entropy-note">
+          Estimated from character-pool size, not real-world predictability. See “Limitations” in the README — entropy is an
+          educational estimate, not a guarantee.
+        </p>
+      </section>
+    </div>
+
+    <!-- BREACH CHECK -->
+    <section class="panel panel-breach" aria-labelledby="breach-heading">
+      <h2 id="breach-heading" class="panel-title-sm">Breach Detection</h2>
+      <p class="panel-sub">
+        Checks the Have I Been Pwned Pwned Passwords dataset using k-anonymity. Only the first 5 characters of a SHA-1 hash
+        ever leave your browser — never the password, never the full hash.
+      </p>
+      <button type="button" id="breach-btn" class="primary-btn" disabled>
+        Check Breach Status
+      </button>
+      <div id="breach-result" class="breach-result" role="status" aria-live="polite"></div>
+    </section>
+
+    <!-- RECOMMENDATIONS -->
+    <section class="panel panel-recommend" aria-labelledby="recommend-heading">
+      <h2 id="recommend-heading" class="panel-title-sm">Recommendations</h2>
+      <ul id="recommendations" class="recommendations">
+        <li>Enter a password above to see personalized recommendations.</li>
+      </ul>
+    </section>
+
+    <!-- PRIVACY NOTICE -->
+    <section class="panel panel-privacy" aria-labelledby="privacy-heading">
+      <h2 id="privacy-heading" class="panel-title-sm">Privacy &amp; Limitations</h2>
+      <p>
+        Your password is analyzed locally. For breach detection, SecurePass sends only the first five characters of a
+        SHA-1 hash to the Pwned Passwords API. The complete password and complete hash are never sent. SecurePass does
+        not store, log, or transmit your password in any form, and never places it in a URL, query parameter,
+        localStorage, sessionStorage, cookie, analytics event, or console log.
+      </p>
+      <p class="privacy-caveat">
+        A “not found” breach result means the password was not present in the Pwned Passwords dataset at the time of
+        the request — it is not a guarantee the password has never been compromised or that it is safe to use.
+        Strength scoring is a heuristic educational estimate and cannot guarantee resistance to every attack.
+      </p>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <p>
+      SecurePass is a client-side educational project. Breach data courtesy of
+      <a href="https://haveibeenpwned.com/" target="_blank" rel="noopener noreferrer">Have I Been Pwned</a>.
+      No backend, no accounts, no tracking.
+    </p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
